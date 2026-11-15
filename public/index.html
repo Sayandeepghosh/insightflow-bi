@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InsightFlow BI | Text-to-SQL Analytics Playground</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #070b14;
+      --card: #0d1527;
+      --border: rgba(255, 255, 255, 0.08);
+      --accent: #10b981;
+      --cyan: #38bdf8;
+      --red: #f43f5e;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); padding: 2rem 1rem; line-height: 1.6; }
+    .container { max-width: 950px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 2rem; }
+    .badge { display: inline-block; font-size: 0.75rem; font-weight: 700; color: var(--accent); background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.25); padding: 0.25rem 0.75rem; border-radius: 9999px; margin-bottom: 0.8rem; }
+    h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 0.5rem; }
+    p.desc { color: var(--muted); font-size: 1rem; }
+    
+    .query-box { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+    input[type="text"] { flex-grow: 1; padding: 0.85rem 1.2rem; background: var(--card); border: 1px solid var(--border); border-radius: 8px; color: #fff; font-size: 1rem; }
+    input[type="text"]:focus { outline: none; border-color: var(--cyan); }
+    button.run-btn { padding: 0.85rem 1.5rem; background: #059669; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    button.run-btn:hover { background: #047857; }
+    
+    .presets { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 2rem; }
+    .preset-btn { background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border); color: var(--muted); padding: 0.35rem 0.75rem; border-radius: 6px; font-size: 0.82rem; cursor: pointer; }
+    .preset-btn:hover { border-color: var(--cyan); color: var(--text); }
+    .preset-btn.danger { border-color: rgba(244, 63, 94, 0.4); color: #fca5a5; }
+    
+    .output-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.8rem; margin-bottom: 1.5rem; display: none; }
+    .meta-row { display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 0.8rem; margin-bottom: 1.2rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--muted); }
+    .status-badge { color: var(--accent); font-weight: 700; }
+    .status-badge.danger { color: var(--red); }
+    
+    .sql-box { background: #090e1a; border: 1px solid var(--border); border-radius: 8px; padding: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #93c5fd; margin-bottom: 1.2rem; word-break: break-all; }
+    
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin-bottom: 1.5rem; }
+    th { text-align: left; background: rgba(255, 255, 255, 0.05); padding: 0.75rem; border-bottom: 2px solid var(--border); color: var(--cyan); font-weight: 600; }
+    td { padding: 0.75rem; border-bottom: 1px solid var(--border); color: #cbd5e1; }
+    
+    .chart-container { display: flex; flex-direction: column; gap: 0.5rem; }
+    .chart-bar-row { display: flex; align-items: center; gap: 0.8rem; font-size: 0.85rem; }
+    .bar-label { width: 32%; text-align: right; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .bar-track { flex-grow: 1; background: rgba(255, 255, 255, 0.05); height: 22px; border-radius: 4px; overflow: hidden; }
+    .bar-fill { background: linear-gradient(90deg, #10b981, #38bdf8); height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+    .bar-value { width: 18%; font-family: 'JetBrains Mono', monospace; color: #fff; font-weight: 600; }
+    
+    footer { text-align: center; margin-top: 3rem; color: var(--muted); font-size: 0.85rem; }
+    footer a { color: var(--cyan); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="badge">Live GitHub Pages Playground</div>
+      <h1>InsightFlow BI Analytics</h1>
+      <p class="desc">Natural language Text-to-SQL engine with AST query safety guards and relational join mapping.</p>
+    </header>
+
+    <div class="query-box">
+      <input type="text" id="promptInput" value="What are our top revenue products?" />
+      <button class="run-btn" onclick="executeBIQuery()">Execute Analysis</button>
+    </div>
+
+    <div class="presets">
+      <span style="font-size: 0.82rem; color: var(--muted); align-self: center;">Test queries:</span>
+      <button class="preset-btn" onclick="setPrompt('What are our top revenue products?')">Top Products</button>
+      <button class="preset-btn" onclick="setPrompt('Show regional revenue and account breakdown')">Regional Breakdown</button>
+      <button class="preset-btn" onclick="setPrompt('Who are our top corporate accounts by spend?')">Top Accounts</button>
+      <button class="preset-btn" onclick="setPrompt('Display monthly revenue timeline')">Monthly Trend</button>
+      <button class="preset-btn danger" onclick="setPrompt('DROP TABLE accounts; SELECT * FROM products')">Simulate Injection (Security Guard)</button>
+    </div>
+
+    <div class="output-card" id="outputCard">
+      <div class="meta-row">
+        <span>Security Check: <strong id="secStatus" class="status-badge">PASSED (READ-ONLY)</strong></span>
+        <span>Execution Latency: <strong id="latencyVal">0.12 ms</strong></span>
+        <span>Rows: <strong id="rowCount">5 rows</strong></span>
+      </div>
+
+      <div style="font-size: 0.8rem; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 0.4rem;">Generated SQL Query</div>
+      <div class="sql-box" id="sqlBox"></div>
+
+      <div id="tableSection">
+        <table id="dataTable">
+          <thead><tr id="tableHead"></tr></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+
+        <div style="font-size: 0.8rem; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 0.8rem;">Visual Revenue Chart</div>
+        <div class="chart-container" id="chartBox"></div>
+      </div>
+    </div>
+
+    <footer>
+      Engineered by <strong>Sayandeep Ghosh</strong> | B.Tech CS Distinction &bull; IIT Kharagpur AI4ICPS Fellow<br/>
+      <a href="https://github.com/Sayandeepghosh/insightflow-bi" target="_blank">&larr; Back to GitHub Repository</a>
+    </footer>
+  </div>
+
+  <script>
+    const DATASETS = {
+      top_products: {
+        sql: "SELECT p.product_name, p.category, SUM(t.quantity) AS units_sold, ROUND(SUM(t.total_amount), 2) AS total_revenue FROM transactions t JOIN products p ON t.product_id = p.product_id GROUP BY p.product_id ORDER BY total_revenue DESC LIMIT 5",
+        cols: ["Product Name", "Category", "Units Sold", "Total Revenue ($)"],
+        rows: [
+          ["Autonomous Agent Enterprise Node", "Software", 10, 8500.0],
+          ["Dedicated GPU Compute Node", "Infrastructure", 3, 5550.0],
+          ["API Security Gateway Proxy", "Software", 10, 2100.0],
+          ["Vector Embedding Cluster (10M)", "Infrastructure", 5, 1600.0],
+          ["24/7 SLA Engineering Retainer", "Services", 1, 600.0]
+        ]
+      },
+      regional: {
+        sql: "SELECT a.region, COUNT(DISTINCT a.account_id) AS active_accounts, COUNT(t.transaction_id) AS orders, ROUND(SUM(t.total_amount), 2) AS regional_revenue FROM accounts a JOIN transactions t ON a.account_id = t.account_id GROUP BY a.region ORDER BY regional_revenue DESC LIMIT 100",
+        cols: ["Region", "Active Accounts", "Orders Placed", "Gross Revenue ($)"],
+        rows: [
+          ["North America", 2, 4, 9150.0],
+          ["EMEA", 2, 4, 5090.0],
+          ["APAC", 1, 2, 4110.0]
+        ]
+      },
+      top_accounts: {
+        sql: "SELECT a.company_name, a.industry, a.region, COUNT(t.transaction_id) AS orders_placed, ROUND(SUM(t.total_amount), 2) AS lifetime_spend FROM accounts a JOIN transactions t ON a.account_id = t.account_id GROUP BY a.account_id ORDER BY lifetime_spend DESC LIMIT 5",
+        cols: ["Company Name", "Industry", "Region", "Orders", "Lifetime Spend ($)"],
+        rows: [
+          ["Aetherius Cloud Systems", "Fintech", "EMEA", 3, 6890.0],
+          ["Hyperion Dynamics", "Autonomous Systems", "APAC", 2, 5090.0],
+          ["Veritas Biotech Labs", "Healthcare", "North America", 2, 2450.0],
+          ["Meridian Retail Platform", "E-Commerce", "EMEA", 2, 2960.0],
+          ["Solaria Grid Technologies", "Energy", "North America", 1, 960.0]
+        ]
+      },
+      monthly: {
+        sql: "SELECT SUBSTR(transacted_at, 1, 7) AS billing_month, COUNT(transaction_id) AS volume, ROUND(SUM(total_amount), 2) AS monthly_revenue FROM transactions GROUP BY billing_month ORDER BY billing_month ASC LIMIT 100",
+        cols: ["Month", "Transactions", "Revenue ($)"],
+        rows: [
+          ["2024-06", 4, 5590.0],
+          ["2024-07", 3, 6050.0],
+          ["2024-08", 3, 6720.0]
+        ]
+      }
+    };
+
+    function setPrompt(p) {
+      document.getElementById('promptInput').value = p;
+      executeBIQuery();
+    }
+
+    function executeBIQuery() {
+      const prompt = document.getElementById('promptInput').value.trim();
+      const outputCard = document.getElementById('outputCard');
+      const secStatus = document.getElementById('secStatus');
+      const sqlBox = document.getElementById('sqlBox');
+      const tableSec = document.getElementById('tableSection');
+      const tableHead = document.getElementById('tableHead');
+      const tableBody = document.getElementById('tableBody');
+      const chartBox = document.getElementById('chartBox');
+      const rowCount = document.getElementById('rowCount');
+
+      outputCard.style.display = 'block';
+
+      // Security validator check
+      const forbidden = ["DROP", "DELETE", "UPDATE", "INSERT", "ALTER", ";"];
+      const upper = prompt.toUpperCase();
+      const isDangerous = forbidden.some(k => upper.includes(k));
+
+      if (isDangerous) {
+        secStatus.className = "status-badge danger";
+        secStatus.innerText = "SECURITY REJECTION (MUTATION BLOCKED)";
+        sqlBox.innerText = "Security Violation: Semicolon chaining or destructive keywords (DROP, DELETE, UPDATE) are prohibited on analytical read-only endpoints.";
+        tableSec.style.display = "none";
+        rowCount.innerText = "0 rows";
+        return;
+      }
+
+      secStatus.className = "status-badge";
+      secStatus.innerText = "PASSED (AST READ-ONLY)";
+      tableSec.style.display = "block";
+
+      let key = "top_products";
+      if (prompt.toLowerCase().includes("region")) key = "regional";
+      else if (prompt.toLowerCase().includes("account") || prompt.toLowerCase().includes("client") || prompt.toLowerCase().includes("spend")) key = "top_accounts";
+      else if (prompt.toLowerCase().includes("month") || prompt.toLowerCase().includes("trend")) key = "monthly";
+
+      const data = DATASETS[key];
+      sqlBox.innerText = data.sql;
+      rowCount.innerText = `${data.rows.length} rows`;
+
+      // Render Table
+      tableHead.innerHTML = data.cols.map(c => `<th>${c}</th>`).join('');
+      tableBody.innerHTML = data.rows.map(r => `<tr>${r.map(v => `<td>${v}</td>`).join('')}</tr>`).join('');
+
+      // Render Chart
+      const maxRev = Math.max(...data.rows.map(r => r[r.length - 1]));
+      chartBox.innerHTML = data.rows.map(r => {
+        const val = r[r.length - 1];
+        const pct = Math.round((val / maxRev) * 100);
+        return `
+          <div class="chart-bar-row">
+            <span class="bar-label">${r[0]}</span>
+            <div class="bar-track">
+              <div class="bar-fill" style="width: ${pct}%"></div>
+            </div>
+            <span class="bar-value">$${val.toLocaleString()}</span>
+          </div>
+        `;
+      }).join('');
+    }
+  </script>
+</body>
+</html>

@@ -1,12 +1,16 @@
 # insightflow-bi
 
-[![CI Tests](https://img.shields.io/badge/pytest-passing-brightgreen.svg)]()
+[![CI Tests](https://github.com/Sayandeepghosh/insightflow-bi/actions/workflows/ci.yml/badge.svg)](https://github.com/Sayandeepghosh/insightflow-bi/actions)
+[![Live Demo](https://img.shields.io/badge/Demo-Live%20GitHub%20Pages-blue.svg)](https://sayandeepghosh.github.io/insightflow-bi/)
 [![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.14-blue.svg)]()
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-teal.svg)]()
 [![Security](https://img.shields.io/badge/Security-AST%20Validated%20Read--Only-green.svg)]()
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)]()
 [![License](https://img.shields.io/badge/License-MIT-green.svg)]()
 
 Production-grade Text-to-SQL business intelligence microservice engineered with strict AST query safety validation, automatic schema introspection, and SQLite analytical execution.
+
+🔗 **Live Interactive SQL Playground:** [https://sayandeepghosh.github.io/insightflow-bi/](https://sayandeepghosh.github.io/insightflow-bi/)
 
 ---
 
